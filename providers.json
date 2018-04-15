@@ -1,0 +1,16 @@
+{
+  "github": {
+  "provider": "github",
+  "module": "passport-github",
+  "strategy": "OAuth2Strategy",
+  "clientID": "d2f09dc9829feb9dc3fa",
+  "clientSecret": "23bdd90cca397960bfc723b9f7b7fcba80600225",
+  "callbackURL": "http://localhost:3000/auth/github/callback",
+  "authPath": "/auth/github",
+  "callbackPath": "/auth/github/callback",
+  "successRedirect": "/auth/account",
+  "failureRedirect": "/login",
+  "scope": ["email", "profile"],
+  "failureFlash": true
+  }
+}
