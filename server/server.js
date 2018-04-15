@@ -39,18 +39,23 @@ passportConfigurator.init();
 // console.log("models:" + JSON.stringify(app.models));
 
 
-// Set up related models
-// passportConfigurator.setupModels({
-//  userModel: app.models.user,
-//  userIdentityModel: app.models.userIdentity,
-//  userCredentialModel: app.models.userCredential
-// });
-// // Configure passport strategies for third party auth providers
-// for(var s in config) {
-//  var c = config[s];
-//  c.session = c.session !== false;
-//  passportConfigurator.configureProvider(s, c);
-// }
+
+// Bootstrap the application, configure models, datasources and middleware.
+// Sub-apps like REST API are mounted via boot scripts.
+boot(app, __dirname);
+
+// Set up related models (nneds to be after "boot", so that app.models are initialized)
+passportConfigurator.setupModels({
+  userModel: app.models.user,
+  userIdentityModel: app.models.userIdentity,
+  userCredentialModel: app.models.userCredential
+});
+// Configure passport strategies for third party auth providers
+for(var s in config) {
+  var c = config[s];
+  c.session = c.session !== false;
+  passportConfigurator.configureProvider(s, c);
+}
 
 app.start = function() {
   // start the web server
@@ -66,13 +71,7 @@ app.start = function() {
 };
 
 
-
-// Bootstrap the application, configure models, datasources and middleware.
-// Sub-apps like REST API are mounted via boot scripts.
-boot(app, __dirname, function(err) {
-  if (err) throw err;
-
-  // start the server if `$ node server.js`
-  if (require.main === module)
-    app.start();
-});
+// start the server if `$ node server.js`
+if (require.main === module) {
+  app.start();
+}

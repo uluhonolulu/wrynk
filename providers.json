@@ -8,7 +8,7 @@
   "callbackURL": "http://localhost:3000/auth/github/callback",
   "authPath": "/auth/github",
   "callbackPath": "/auth/github/callback",
-  "successRedirect": "/auth/account",
+  "successRedirect": "/explorer",
   "failureRedirect": "/login",
   "scope": ["email", "profile"],
   "failureFlash": true
