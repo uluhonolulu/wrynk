@@ -1,9 +1,12 @@
 'use strict';
+const { UserCredential } = require('loopback-component-passport');
+
 
 var loopback = require('loopback');
 var boot = require('loopback-boot');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
+const Util = require('../lib/util');
 
 var app = module.exports = loopback();
 // Create an instance of PassportConfigurator with the app instance
@@ -17,11 +20,6 @@ app.middleware('session', session({
   secret: 'kitty',
   saveUninitialized: true,
   resave: true,
-}));
-
-// The access token is only available after boot
-app.middleware('auth', loopback.token({
-  model: app.models.accessToken,
 }));
 
 // Load the provider configurations
@@ -44,7 +42,12 @@ passportConfigurator.init();
 // Sub-apps like REST API are mounted via boot scripts.
 boot(app, __dirname);
 
-// Set up related models (nneds to be after "boot", so that app.models are initialized)
+// The access token is only available after boot
+app.middleware('auth', loopback.token({
+  model: app.models.accessToken,
+}));
+
+// Set up related models (needs to be after "boot", so that app.models are initialized)
 passportConfigurator.setupModels({
   userModel: app.models.user,
   userIdentityModel: app.models.userIdentity,
@@ -54,6 +57,7 @@ passportConfigurator.setupModels({
 for(var s in config) {
   var c = config[s];
   c.session = c.session !== false;
+  c.profileToUser = Util.profileToUser;
   passportConfigurator.configureProvider(s, c);
 }
 
@@ -67,11 +71,32 @@ app.start = function() {
       var explorerPath = app.get('loopback-component-explorer').mountPath;
       console.log('Browse your REST API at %s%s', baseUrl, explorerPath);
     }
+
+    app.models.User.observe('load', (ctx, next) => {
+      console.log("load hook");
+      next();
+    })
   });
 };
+
+
 
 
 // start the server if `$ node server.js`
 if (require.main === module) {
   app.start();
+}
+
+async function importCard(path) {
+  let data = await fs.readFile(path);
+  let card = await IdCard.fromArchive(data);
+  await cardStore.put(name, card);
+  // Get the card back from the card store. This obviously looks a bit weird,
+  // but importantly this will configure the LoopBack wallet on the connection
+  // profile stored within the card.
+  card = await cardStore.get(name);
+  // Then we import the card into the card store using the admin connection.
+  // This imports the credentials from the card into the LoopBack wallet.
+  const adminConnection = new AdminConnection({ cardStore });
+  await adminConnection.importCard(name, card);  
 }
