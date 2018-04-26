@@ -61,6 +61,14 @@ for(var s in config) {
   passportConfigurator.configureProvider(s, c);
 }
 
+var composerSettings = {
+  card: "admin@rynk",
+  namespaces: 'never',
+  authentication: true,
+  multiuser: true
+}
+app.set('composer', composerSettings);
+
 app.start = function() {
   // start the web server
   return app.listen(function() {
