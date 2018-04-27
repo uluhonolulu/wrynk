@@ -8,6 +8,8 @@ const connector = require('loopback-connector-composer');
 const IdCard = require('composer-common').IdCard;
 const LoopBackCardStore = require('../../lib/loopbackcardstore');
 const Card = require('../../common/models/card');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = function(app) {
     // const fileSystemCardStore = new FileSystemCardStore();
@@ -33,45 +35,47 @@ module.exports = function(app) {
             const cardStore = new LoopBackCardStore(Card, userId);
             const adminConnection = new AdminConnection();
             try {
-            let issuingCard = await adminConnection.exportCard("admin@rynk");
-            await businessNetworkConnection.connect("admin@rynk");//TODO: use the REST connection identity
+                let issuingCard = await adminConnection.exportCard("admin@rynk");
+                await businessNetworkConnection.connect("admin@rynk");//TODO: use the REST connection identity
+
                 var user = await businessNetworkConnection.ping();
                 console.log(user);
-                
+
+                // Get the factory for the business network.
+                let factory = businessNetworkConnection.getBusinessNetwork().getFactory();
+                // Create the participants, Provide unique entries only
+                let participant = factory.newResource('org.rynk', "User", "github.uluhonolulu");
+                let participantRegistry = await businessNetworkConnection.getParticipantRegistry('org.rynk.User');
+                await participantRegistry.add(participant);
+
+                let identity = await businessNetworkConnection.issueIdentity('org.rynk.User' + '#' + "github.uluhonolulu", "github.uluhonolulu1234");
+                //TODO: save the card in the DB; returning user
+                let metadata= {
+                    userName : identity.userID,
+                    version : 1,
+                    enrollmentSecret: identity.userSecret,
+                    businessNetwork : issuingCard.getBusinessNetworkName()
+                };
+                let profileData = issuingCard.getConnectionProfile();
+                let idCard = new IdCard(metadata,profileData);
+                const fileName = BusinessNetworkCardStore.getDefaultCardName(idCard);
+                await idCard.toArchive({ type: 'nodebuffer' })
+                    .then( (cardBuffer)=>{
+                        // got the id card to write to a buffer
+                        let cardFilePath = path.resolve(fileName);
+                        try {
+                            fs.writeFileSync(cardFilePath,cardBuffer);
+                        } catch (cause) {
+                            const error = new Error(`Unable to write card file: ${cardFilePath}`);
+                            error.cause = cause;
+                            return Promise.reject(error);
+                        }
+                    });               
             } catch (error) {
                 console.error(error);
-                
+                process.exit(1);
             }
-            // Get the factory for the business network.
-            let factory = businessNetworkConnection.getBusinessNetwork().getFactory();
-            // Create the participants, Provide unique entries only
-            let participant = factory.newResource('org.rynk', "User", "github.uluhonolulu");
-            let participantRegistry = await businessNetworkConnection.getParticipantRegistry('org.rynk.User');
-            await participantRegistry.add(participant);
 
-            let identity = await businessNetworkConnection.issueIdentity('org.rynk.User' + '#' + "github.uluhonolulu", "github.uluhonolulu");
-            //TODO: save the card in the DB; returning user
-            let metadata= {
-                userName : identity.userID,
-                version : 1,
-                enrollmentSecret: identity.userSecret,
-                businessNetwork : issuingCard.getBusinessNetworkName()
-            };
-            let profileData = issuingCard.getConnectionProfile();
-            let idCard = new IdCard(metadata,profileData);
-            const fileName = cmdUtil.getDefaultCardName(idCard);
-            await card.toArchive({ type: 'nodebuffer' })
-                .then( (cardBuffer)=>{
-                    // got the id card to write to a buffer
-                    cardFilePath = path.resolve(fileName);
-                    try {
-                        fs.writeFileSync(cardFilePath,cardBuffer);
-                    } catch (cause) {
-                        const error = new Error(`Unable to write card file: ${cardFilePath}`);
-                        error.cause = cause;
-                        return Promise.reject(error);
-                    }
-                });
             // let data = {
             //     "$class": "org.rynk.User",
             //     "userName": "8867"
