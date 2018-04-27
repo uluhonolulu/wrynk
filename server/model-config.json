@@ -8,7 +8,11 @@
   },
   "user": {
     "dataSource": "rynk",
-    "public": true
+    "public": false
+  },
+  "Card": {
+    "dataSource": "rynk",
+    "public": false
   },
   "accessToken": {
     "dataSource": "rynk",
