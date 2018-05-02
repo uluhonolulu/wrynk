@@ -16,7 +16,7 @@ module.exports = function(app) {
     const adminConnection = new AdminConnection();
     // const businessNetworkCardStore = new BusinessNetworkCardStore();    
     //after save hook
-    app.models.User.observe('after save', async (ctx, next) => {  //TODO: change to "after save"
+    app.models.User.observe('after save', async (ctx, next) => {  
         console.log("after save");
         // console.log(JSON.stringify(ctx));
         // const composer = app.get('composer');
@@ -31,7 +31,7 @@ module.exports = function(app) {
             //3. create and save a card
             //"instance":{"username":"github.uluhonolulu","email":"uluhonolulu@loopback.github.com","id":"5adafa99f8c6f228d054aa8c"}
             let userId = ctx.instance.id.toString();
-            let userName = ctx.instance.username + '3';   //github.uluhonolulu
+            let userName = ctx.instance.username;   //github.uluhonolulu
             const adminCardName = "admin@rynk";//TODO: use the REST connection identity
             const adminConnection = new AdminConnection();
             try {
@@ -79,45 +79,57 @@ module.exports = function(app) {
 
         }
         next();
-    })  
+    });
+    
+    app.models.User.observe('loaded', async (ctx, next) => {
+        console.log(JSON.stringify(ctx));
+        const composer = app.get('composer');
+        const dataSource = createDataSource(app, composer);
+        var connector = dataSource.connector;
+        if (!ctx.isNewInstance) {
+            const Card = app.models.Card;
+            const userId = ctx.data.id;
+            const cardStore = new LoopBackCardStore(Card, userId);
+            const businessNetworkConnection = new BusinessNetworkConnection({cardStore});
+            const cardName = ctx.data.username + "@rynk";
+            try {
+                await businessNetworkConnection.connect(cardName);
+                var user = await businessNetworkConnection.ping();
+                console.log(user);                   
+            } catch (error) {
+                console.error(error);                   
+            }            
+        }
+    });
+
+    app.models.User.afterRemote('**', function (ctx, user, next){
+        console.log(JSON.stringify(ctx));
+        console.log(JSON.stringify(user));
+        
+    });
+    app.models.UserIdentity.afterRemote('**', function (ctx, user, next){
+        console.log(JSON.stringify(ctx));
+        console.log(JSON.stringify(user));
+        
+    });
+
+
 };
 
 
-    // Define and register the method.
-    let issueIdentity = (data, res, options) => {
-        let cardData;
-        return new Promise((resolve, reject) => {
-            connector.issueIdentity(data.participant, data.userID, data.options, options, (err, result) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(result);
-            });
-        }).then((cardData_) => {
-            cardData = cardData_;
-            return IdCard.fromArchive(cardData);
-        })
-        .then((card) => {
-            const name = card.getUserName() + '@' + card.getBusinessNetworkName();
-            res.setHeader('Content-Disposition', `attachment; filename=${name}.card`);
-            res.setHeader('Content-Length', cardData.length);
-            res.setHeader('Content-Type', 'application/octet-stream');
-            return cardData;
-        });
+function createDataSource(app, composer) {
+    const connectorSettings = {
+        name: 'composer',
+        connector: connector,
+        card: composer.card,
+        cardStore: composer.cardStore,
+        namespaces: composer.namespaces,
+        multiuser: composer.multiuser,
+        fs: composer.fs,
+        wallet: composer.wallet
     };
+    return app.loopback.createDataSource('composer', connectorSettings);
+}
+ 
 
 
-    function createDataSource(app, composer) {
-        const connectorSettings = {
-            name: 'composer',
-            connector: connector,
-            card: composer.card,
-            cardStore: composer.cardStore,
-            namespaces: composer.namespaces,
-            multiuser: composer.multiuser,
-            fs: composer.fs,
-            wallet: composer.wallet
-        };
-        return app.loopback.createDataSource('composer', connectorSettings);
-    }
-        
