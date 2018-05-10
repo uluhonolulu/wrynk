@@ -1,10 +1,15 @@
 {
   "_meta": {
     "sources": [
+      "loopback/common/models",
+      "loopback/server/models",
       "../common/models",
       "./models",
       "./node_modules/loopback-component-passport/lib/models"
     ]
+  },
+  "User": {
+    "dataSource": "rynk"
   },
   "user": {
     "dataSource": "rynk",
@@ -13,6 +18,17 @@
   "Card": {
     "dataSource": "rynk",
     "public": false
+  },
+  "AccessToken": {
+    "dataSource": "rynk",
+    "public": false,
+    "relations": {
+      "user": {
+        "type": "belongsTo",
+        "model": "user",
+        "foreignKey": "userId"
+      }
+    }
   },
   "accessToken": {
     "dataSource": "rynk",

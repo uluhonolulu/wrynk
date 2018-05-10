@@ -23,7 +23,7 @@ module.exports = function (app) {
     }
     const authentication = !!composer.authentication;
     if (authentication) {
-        app.enableAuth();
+        app.enableAuth({ datasource: 'rynk' });
     }
 
 };

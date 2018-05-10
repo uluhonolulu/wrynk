@@ -16,7 +16,7 @@ module.exports = function(app) {
     const adminConnection = new AdminConnection();
     // const businessNetworkCardStore = new BusinessNetworkCardStore();    
     //after save hook
-    app.models.User.observe('after save', async function createCard(ctx, next) {  
+    app.loopback.User.observe('after save', async function createCard(ctx, next) {  
         console.log("after save");
         // console.log(JSON.stringify(ctx));
         // const composer = app.get('composer');
@@ -81,7 +81,7 @@ module.exports = function(app) {
         next();
     });
     
-    app.models.User.observe('loaded', async (ctx, next) => {
+    app.loopback.User.observe('loaded', async (ctx, next) => {
         console.log(JSON.stringify(ctx));
         const composer = app.get('composer');
         const dataSource = createDataSource(app, composer);
