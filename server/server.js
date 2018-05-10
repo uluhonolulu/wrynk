@@ -36,6 +36,14 @@ passportConfigurator.init();
 
 // console.log("models:" + JSON.stringify(app.models));
 
+//composer settings need to be set before boot -- used in discovery
+var composerSettings = {
+  card: "admin@rynk",
+  namespaces: 'never',
+  authentication: true,
+  multiuser: true
+}
+app.set('composer', composerSettings);
 
 
 // Bootstrap the application, configure models, datasources and middleware.
@@ -61,14 +69,6 @@ for(var s in config) {
   passportConfigurator.configureProvider(s, c);
 }
 
-var composerSettings = {
-  card: "admin@rynk",
-  namespaces: 'never',
-  authentication: true,
-  multiuser: true
-}
-app.set('composer', composerSettings);
-
 app.start = function() {
   // start the web server
   return app.listen(function() {
@@ -80,10 +80,6 @@ app.start = function() {
       console.log('Browse your REST API at %s%s', baseUrl, explorerPath);
     }
 
-    app.models.User.observe('load', (ctx, next) => {
-      console.log("load hook");
-      next();
-    })
   });
 };
 

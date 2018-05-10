@@ -16,7 +16,7 @@ module.exports = function(app) {
     const adminConnection = new AdminConnection();
     // const businessNetworkCardStore = new BusinessNetworkCardStore();    
     //after save hook
-    app.models.User.observe('after save', async (ctx, next) => {  
+    app.models.User.observe('after save', async function createCard(ctx, next) {  
         console.log("after save");
         // console.log(JSON.stringify(ctx));
         // const composer = app.get('composer');
@@ -102,16 +102,44 @@ module.exports = function(app) {
         }
     });
 
-    app.models.User.afterRemote('**', function (ctx, user, next){
-        console.log(JSON.stringify(ctx));
-        console.log(JSON.stringify(user));
-        
+    app.get('/test', function test(req, res) {
+        var ctx = app;
     });
-    app.models.UserIdentity.afterRemote('**', function (ctx, user, next){
-        console.log(JSON.stringify(ctx));
-        console.log(JSON.stringify(user));
-        
-    });
+
+    //kinda what we do for routing
+    // app.post('/api/createCard', function (req, res) {
+    //     var transactionData = req.body.transactionData;
+    //     var cardName = req.headers.authorization;
+    //     var mynetwork = new MyNetwork(cardName);
+    //     mynetwork.init().then(function () {
+    //         return mynetwork.createCar(transactionData)
+    //     }).then(function () {
+    //         res.json({ success: true })
+    //     }).catch(function (error) {
+    //         res.status(500).json({error: error.toString()})    
+    //     })
+    // });
+
+    // init() {
+    //     var _this = this;
+    //     return this.connection.connect(this.cardName).then((result) => {
+    //       _this.businessNetworkDefinition = result;
+    //       _this.serializer = _this.businessNetworkDefinition.getSerializer()
+    //     })
+    //   }
+
+    // createCar(transactionData) {
+    //     var _this = this;
+    //     var resource;
+    //     var transactionData;
+    //     transactionData['$class'] = "org.acme.createCar";
+    //     return this.connection.getTransactionRegistry("org.acme.createCar")
+    //       .then(function(createProductTransactionRegistry) {
+    //         serializer = _this.businessNetworkDefinition.getSerializer()
+    //         resource = serializer.fromJSON(transactionData);
+    //         return _this.connection.submitTransaction(resource);
+    //       })
+    //   }
 
 
 };
