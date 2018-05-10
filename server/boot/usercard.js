@@ -56,7 +56,12 @@ module.exports = function(app) {
                 // Create the participants, Provide unique entries only
                 let participant = factory.newResource('org.rynk', "User", userName);
                 let participantRegistry = await businessNetworkConnection.getParticipantRegistry('org.rynk.User');
-                await participantRegistry.add(participant);
+                let participantId = participant.getFullyQualifiedIdentifier();
+                let exists = await participantRegistry.exists(userName);
+                if (!exists){
+                    await participantRegistry.add(participant);
+                    participant = await participantRegistry.get(userName);   //make sure it's there
+                }
 
                 let identity = await businessNetworkConnection.issueIdentity('org.rynk.User' + '#' + userName, userName);
                 //TODO: save the card in the DB; returning user
@@ -83,23 +88,23 @@ module.exports = function(app) {
     
     app.loopback.User.observe('loaded', async (ctx, next) => {
         console.log(JSON.stringify(ctx));
-        const composer = app.get('composer');
-        const dataSource = createDataSource(app, composer);
-        var connector = dataSource.connector;
-        if (!ctx.isNewInstance) {
-            const Card = app.models.Card;
-            const userId = ctx.data.id;
-            const cardStore = new LoopBackCardStore(Card, userId);
-            const businessNetworkConnection = new BusinessNetworkConnection({cardStore});
-            const cardName = ctx.data.username + "@rynk";
-            try {
-                await businessNetworkConnection.connect(cardName);
-                var user = await businessNetworkConnection.ping();
-                console.log(user);                   
-            } catch (error) {
-                console.error(error);                   
-            }            
-        }
+        // const composer = app.get('composer');
+        // const dataSource = createDataSource(app, composer);
+        // var connector = dataSource.connector;
+        // if (!ctx.isNewInstance) {
+        //     const Card = app.models.Card;
+        //     const userId = ctx.data.id;
+        //     const cardStore = new LoopBackCardStore(Card, userId);
+        //     const businessNetworkConnection = new BusinessNetworkConnection({cardStore});
+        //     const cardName = ctx.data.username + "@rynk";
+        //     try {
+        //         await businessNetworkConnection.connect(cardName);
+        //         var user = await businessNetworkConnection.ping();
+        //         console.log(user);                   
+        //     } catch (error) {
+        //         console.error(error);                   
+        //     }            
+        // }
     });
 
     app.get('/test', function test(req, res) {
