@@ -31,7 +31,7 @@ module.exports = function(app) {
             //3. create and save a card
             //"instance":{"username":"github.uluhonolulu","email":"uluhonolulu@loopback.github.com","id":"5adafa99f8c6f228d054aa8c"}
             let userId = ctx.instance.id.toString();
-            let userName = ctx.instance.username;   //github.uluhonolulu
+            let userName = ctx.instance.username.replace(/\./, "_");   //github_uluhonolulu
             const adminCardName = "admin@rynk";//TODO: use the REST connection identity
             const adminConnection = new AdminConnection();
             try {
@@ -56,7 +56,7 @@ module.exports = function(app) {
                 // Create the participants, Provide unique entries only
                 let participant = factory.newResource('org.rynk', "User", userName);
                 let participantRegistry = await businessNetworkConnection.getParticipantRegistry('org.rynk.User');
-                let participantId = participant.getFullyQualifiedIdentifier();
+                // let participantId = participant.getFullyQualifiedIdentifier();
                 let exists = await participantRegistry.exists(userName);
                 if (!exists){
                     await participantRegistry.add(participant);
