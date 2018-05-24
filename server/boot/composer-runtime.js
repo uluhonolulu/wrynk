@@ -61,7 +61,10 @@ module.exports = function (app) {
             }
 
             // Find the default card for this user.
-            return Card.findOne({ where: { userId }})   //TODO: FindOrCreate, and we won't have to use a hook
+            //TODO: FindOrCreate, and we won't have to use a hook
+            //We need: userId, username
+            var self = app;
+            return Card.findOne({ where: { userId }})   
                 .then((lbCard) => {
 
                     // Store the card for the LoopBack connector to use.

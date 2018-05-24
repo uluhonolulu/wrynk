@@ -87,6 +87,8 @@ module.exports = function(app) {
     });
     
     app.loopback.User.observe('loaded', async (ctx, next) => {
+        ctx.options.username = "ulu";
+        ctx.hookState.username = "ulu";
         console.log(JSON.stringify(ctx));
         // const composer = app.get('composer');
         // const dataSource = createDataSource(app, composer);
