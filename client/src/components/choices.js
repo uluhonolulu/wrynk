@@ -18,7 +18,23 @@ export default class Choices extends Component {
         "count": 1
       }
     ],
-    canVote: false
+    canVote: false,
+    access_token: "s5xQXaXcrJ97PWdG9OxcFlNH6bqANBuDxDpxUdEZuktYSekzSW6qpAWOX9gLkGx7"
+  }
+
+
+  async componentDidMount() {
+    const response = await fetch(`/api/Choice?access_token=${this.state.access_token}`);
+    const choices = await response.json();
+    this.setState({ choices });
+  }  
+
+  async setVotePossibility() {
+    try {
+      
+    } catch (error) {
+      
+    }
   }
 
   render() {
