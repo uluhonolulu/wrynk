@@ -40,7 +40,7 @@ export default class Choices extends Component {
       console.log(response.status);  
       console.log(response.statusText);  
       console.log(response.type);        
-      return true;
+      return response.status === 200;
     } catch (error) {
       console.log(error);
       return false;
@@ -49,7 +49,7 @@ export default class Choices extends Component {
 
   render() {
     const canVote = this.state.canVote;
-    const cannotVoteMessage = <Alert bsStyle="warning">You are not allowed to vote</Alert>;
+    const cannotVoteMessage = <Alert bsStyle="danger">You are not allowed to vote, sorry!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
         <Radio key={index} disabled={!canVote}>{choice.name}</Radio>
@@ -68,14 +68,32 @@ export default class Choices extends Component {
     )
   }
 
-  handleClick() {
+  async handleClick() {
     this.setState({ isLoading: true, canVote: false });
 
-    // This probably where you would have an `ajax` call
-    // setTimeout(() => {
-    //   // Completed of async action, set loading state back
-    //   this.setState({ isLoading: false });
-    // }, 2000);
+    const voteData = {
+      "$class": "org.rynk.Vote",
+      "uuid": "xyzt",
+      "votedChoice": "resource:org.rynk.Choice#Dobro"
+    }
+    try {
+      const response = await fetch(`/api/Vote?access_token=${this.state.access_token}`, 
+        {
+          method: "post",  
+          headers: {  
+            "content-type": "application/json",
+            "Accept": "application/json"  
+          },  
+          body: voteData
+        });
+      console.log(response.status);  
+      console.log(response.statusText);  
+      console.log(response.type);        
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }    
   }
   
 }
