@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { Button, FormGroup, Radio } from 'react-bootstrap';
 
 export default class Choices extends Component {
 
@@ -21,15 +22,20 @@ export default class Choices extends Component {
   }
 
   render() {
+    const canVote = this.state.canVote;
+
+    //const cannotVoteMessage = 
+
     const choices = this.state.choices.map((choice) => {
       return (
-        <div>{choice.name}</div>
+        <Radio key={choice.name} disabled={!canVote}>{choice.name}</Radio>
       );
-    })
+    });
+
     return (
-      <div>
+      <FormGroup>
         {choices}
-      </div>
+      </FormGroup>
     )
   }
 }
