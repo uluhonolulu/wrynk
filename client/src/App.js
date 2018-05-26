@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+import Choices from './components/choices';
+
 class App extends Component {
   render() {
     return (
@@ -16,7 +18,7 @@ class App extends Component {
                   <span className="icon-bar"></span>
                   <span className="icon-bar"></span>
                 </button>
-                <a className="navbar-brand" href="#">rynk</a>
+                <a className="navbar-brand" href="/">rynk</a>
               </div>
               <div id="navbar" className="navbar-collapse collapse navbar-right">
                 <a href="/auth/github" className="btn btn-success">Sign in</a>
@@ -29,7 +31,7 @@ class App extends Component {
 
         <div className="container">
           <div className="row">
-
+            <Choices/>
           </div>
         </div>
 
