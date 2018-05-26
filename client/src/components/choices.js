@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Button, FormGroup, Radio } from 'react-bootstrap';
+import { Button, FormGroup, Radio, Alert } from 'react-bootstrap';
 
 export default class Choices extends Component {
 
@@ -24,7 +24,7 @@ export default class Choices extends Component {
   render() {
     const canVote = this.state.canVote;
 
-    //const cannotVoteMessage = 
+    const cannotVoteMessage = <Alert bsStyle="warning">You are not allowed to vote</Alert>;
 
     const choices = this.state.choices.map((choice) => {
       return (
@@ -34,6 +34,7 @@ export default class Choices extends Component {
 
     return (
       <FormGroup>
+        {canVote? null : (cannotVoteMessage)}
         {choices}
       </FormGroup>
     )
