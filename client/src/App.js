@@ -20,9 +20,13 @@ class App extends Component {
                 </button>
                 <a className="navbar-brand" href="/">rynk</a>
               </div>
-              <div id="navbar" className="navbar-collapse collapse navbar-right">
-                <a href="/auth/github" className="btn btn-success">Sign in</a>
-              </div>
+
+              <ul class="navbar-nav">
+                <li class="navbar-item">
+                    <a href="/auth/github" class="nav-link">Sign in</a>
+                </li>
+              </ul>              
+
             </div>
           </nav>
 
