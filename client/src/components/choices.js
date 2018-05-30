@@ -78,7 +78,7 @@ export default class Choices extends Component {
     const cannotVoteMessage = <Alert bsStyle="danger">You are not allowed to vote, sorry!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
-        <Radio key={index} disabled={!canVote} name="choices">{choice.name}</Radio>
+        <Radio key={index} disabled={!canVote} name="choices" value={choice.name}>{choice.name}</Radio>
       );
     });
 
@@ -88,7 +88,7 @@ export default class Choices extends Component {
       <FormGroup>
         {canVote? null : (cannotVoteMessage)}
         {choices}
-        <Button bsStyle="success" disabled={isLoading} onClick={!isLoading ? this.handleClick : null} type="submit">    
+        <Button bsStyle="success" disabled={isLoading} type="submit">    
           {isLoading ? 'Please wait...' : 'Vote'}
         </Button>
       </FormGroup>
@@ -96,19 +96,23 @@ export default class Choices extends Component {
     )
   }
 
-  onFormSubmit(event) {
+  async onFormSubmit(event) {
     event.preventDefault();
+    this.setState({ isLoading: true, canVote: false });
     const data = new FormData(event.target);
+    let chosen = data.get('choices');
+    await this.voteFor(chosen);
+    this.setState({ isLoading: false });
   };  
 
-  async handleClick() {
-    this.setState({ isLoading: true, canVote: false });
+  async voteFor(choice){
 
     const voteData = {
       "$class": "org.rynk.Vote",
       "uuid": "xyzt",
-      "votedChoice": "resource:org.rynk.Choice#Dobro"
-    }
+      "votedChoice": `resource:org.rynk.Choice#${choice}`
+    };
+
     try {
       const response = await fetch(`/api/Vote?access_token=${this.state.access_token}`, 
         {
@@ -121,12 +125,19 @@ export default class Choices extends Component {
         });
       console.log(response.status);  
       console.log(response.statusText);  
-      console.log(response.type);        
+      console.log(response.type);  
+      if (response.status !== 200) {
+        this.handleInvalidResponse(response);
+      }      
       return true;
     } catch (error) {
       console.error(error);
       return false;
-    }    
+    }        
+  }
+
+  async handleClick() {
+
   }
 
   async handleInvalidResponse(response) {
