@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Button, FormGroup, Radio, Alert } from 'react-bootstrap';
 import cookie from 'react-cookies';
+import uuidv1 from 'uuid/v1';
 
 
 export default class Choices extends Component {
@@ -106,10 +107,10 @@ export default class Choices extends Component {
   };  
 
   async voteFor(choice){
-
+    const uuid = uuidv1();
     const voteData = {
       "$class": "org.rynk.Vote",
-      "uuid": "xyzt",
+      "uuid": uuid,
       "votedChoice": `resource:org.rynk.Choice#${choice}`
     };
 
