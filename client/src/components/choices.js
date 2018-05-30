@@ -39,11 +39,8 @@ export default class Choices extends Component {
     if(response.status === 200) {
       const choices = await response.json();
       this.setState({ choices });
-    } else if (response.status === 404) {
-      this.setState({error: {message: "Blockchain is not started."}});
     } else {
-      const error = await response.json();
-      this.setState({ error: error.error });
+      await this.handleInvalidResponse(response); 
     }
     
     this.setState({ isLoading: false }); 
@@ -55,10 +52,12 @@ export default class Choices extends Component {
       console.log(response.status);  
       console.log(response.statusText);  
       console.log(response.type);       
-      if (response.status === 404) {
-        this.setState({error: {message: "Blockchain is not started."}});
-      } 
-      return response.status === 200;
+      if (response.status === 200) {
+        return true;  
+      } else {
+        await this.handleInvalidResponse(response);
+        return false;
+      }
     } catch (error) {
       console.log(error);
       return false;
@@ -118,7 +117,7 @@ export default class Choices extends Component {
             "content-type": "application/json",
             "Accept": "application/json"  
           },  
-          body: voteData
+          body: JSON.stringify(voteData)
         });
       console.log(response.status);  
       console.log(response.statusText);  
@@ -128,6 +127,17 @@ export default class Choices extends Component {
       console.error(error);
       return false;
     }    
+  }
+
+  async handleInvalidResponse(response) {
+    if (response.status === 404) {
+      this.setState({error: {message: "Blockchain is not started."}});
+    } else if (response.status === 401) {
+      this.setState({error: {message: "Please <a href='/auth/github'>sign in</a>!"}});
+    } else {
+      const error = await response.json();
+      this.setState({ error: error.error });      
+    }
   }
   
 }
