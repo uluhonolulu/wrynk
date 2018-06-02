@@ -13,14 +13,7 @@ export default class Choices extends Component {
 
     this.state = {
       choices: [],
-      results: [
-        {
-          "$class": "org.rynk.VoteTotal",
-          "choiceName": "Dobro",
-          "votedChoice": "resource:org.rynk.Choice#Dobro",
-          "count": 1
-        }
-      ],
+      results: [],
       isLoading: true,
       access_token: cookie.load('access_token')
     };
@@ -38,9 +31,21 @@ export default class Choices extends Component {
     try {
       const canVote = await this.canIVote();
       this.setState({ canVote });
-      // const response = await fetch(`/api/Choice?access_token=${this.state.access_token}`).then(this.handleResponse.bind(this));
+
       const choices = await this.getChoices();
-      this.setState({ choices });    
+      this.setState({ choices }); 
+      
+      const results = await this.getResults();
+      this.setState(results);
+
+      choices.forEach(choice => {
+        let voteResult = results.find(result => result.choiceName === choice.name);
+        if (voteResult) {
+          choice.count = voteResult.count
+        } else {
+          choice.count = 0;
+        }
+      });
     } catch (error) {
       //everything's handled already
     }
@@ -65,10 +70,15 @@ export default class Choices extends Component {
     return choices;
   }
 
+  async getResults(){
+    const response = await this.callBlockchain('VoteTotal');
+    return await response.json();
+  }
+
   render() {
 
 
-    if (!this.state.access_token) {
+    if (!this.state.access_token || (this.state.error && this.state.error.message) === 401) {
       // window.location.assign("/auth/github");
       return (<Alert bsStyle="danger">Please <a href="/auth/github">sign in</a>!</Alert>);
     }
@@ -85,7 +95,7 @@ export default class Choices extends Component {
     const cannotVoteMessage = <Alert bsStyle="danger">You are not allowed to vote, sorry!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
-        <Radio key={index} disabled={!canVote} name="choices" value={choice.name}>{choice.name}</Radio>
+        <Radio key={index} disabled={!canVote} name="choices" value={choice.name}>{choice.name}: {choice.count}</Radio>
       );
     });
 
@@ -177,7 +187,7 @@ export default class Choices extends Component {
     if (response.status === 404) {
       return "Blockchain is not started.";
     } else if (response.status === 401) {
-      return "Please <a href='/auth/github'>sign in</a>!";
+      return 401;
     } else {
       let contentType = response.headers.get("Content-Type");
       if (contentType && contentType.includes('json')) {
