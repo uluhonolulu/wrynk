@@ -9,25 +9,19 @@ class App extends Component {
     return (
       <div>
         <header>
-          <nav className="navbar navbar-inverse navbar-static-top" role="navigation">
+          <nav className="navbar navbar-inverse navbar-static-top">
             <div className="container">
               <div className="navbar-header">
-                <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                  <span className="sr-only">Toggle navigation</span>
-                  <span className="icon-bar"></span>
-                  <span className="icon-bar"></span>
-                  <span className="icon-bar"></span>
-                </button>
-                <a className="navbar-brand" href="/">rynk</a>
+                <a className="navbar-brand" href="/" style={{fontSize:"24px"}}>rynk</a>
               </div>
 
-              <ul className="navbar-nav">
-                <li className="navbar-item">
+              <ul className="nav navbar-nav  navbar-right">
+                <li className="active">
                     <a href="/auth/github" className="nav-link">Sign in</a>
                 </li>
-              </ul>              
+              </ul>          
+            </div>    
 
-            </div>
           </nav>
 
         </header>
