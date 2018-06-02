@@ -12,7 +12,7 @@ const path = require('path');
 
 module.exports = function(app) {
     // const fileSystemCardStore = new FileSystemCardStore();
-    const businessNetworkConnection = new BusinessNetworkConnection();
+    let businessNetworkConnection = new BusinessNetworkConnection();
     const adminConnection = new AdminConnection();
     // const businessNetworkCardStore = new BusinessNetworkCardStore();    
     //after save hook
@@ -54,13 +54,23 @@ module.exports = function(app) {
                 // Get the factory for the business network.
                 let factory = businessNetworkConnection.getBusinessNetwork().getFactory();
                 // Create the participants, Provide unique entries only
-                let participant = factory.newResource('org.rynk', "User", userName);
                 let participantRegistry = await businessNetworkConnection.getParticipantRegistry('org.rynk.User');
                 // let participantId = participant.getFullyQualifiedIdentifier();
                 let exists = await participantRegistry.exists(userName);
                 if (!exists){
+                    let participant = factory.newResource('org.rynk', "User", userName);
                     await participantRegistry.add(participant);
-                    participant = await participantRegistry.get(userName);   //make sure it's there
+                    //HACK: let's just get the added participant until it's actually there
+                    let success = false;
+                    while(!success){
+                        try {
+                            participant = await participantRegistry.get(userName);   //make sure it's there
+                            success = true;
+                        } catch (error) {
+                            console.error("Error getting the new participant");
+                        }                        
+                    }
+
                 }
 
                 let identity = await businessNetworkConnection.issueIdentity('org.rynk.User' + '#' + userName, userName);
@@ -76,7 +86,19 @@ module.exports = function(app) {
 
                 const Card = app.models.Card;//require('../../common/models/card');
                 const cardStore = new LoopBackCardStore(Card, userId);
-                await cardStore.put(userName + '@rynk', idCard);               
+                const cardName = userName + '@rynk';
+                await cardStore.put(cardName, idCard);    
+                
+                //ping to activate
+                businessNetworkConnection = new BusinessNetworkConnection({cardStore});
+                console.log("Pinging using " + cardName);               
+                try {
+                    await businessNetworkConnection.connect(cardName);
+                    var user = await businessNetworkConnection.ping();
+                    console.log(user);                   
+                } catch (error) {
+                    console.error(error);                   
+                } 
             } catch (error) {
                 console.error(error);
                 process.exit(1);
@@ -87,9 +109,9 @@ module.exports = function(app) {
     });
     
     app.loopback.User.observe('loaded', async (ctx, next) => {
-        ctx.options.username = "ulu";
-        ctx.hookState.username = "ulu";
-        console.log(JSON.stringify(ctx));
+        // ctx.options.username = "ulu";
+        // ctx.hookState.username = "ulu";
+        // console.log(JSON.stringify(ctx));
         // const composer = app.get('composer');
         // const dataSource = createDataSource(app, composer);
         // var connector = dataSource.connector;
@@ -109,9 +131,9 @@ module.exports = function(app) {
         // }
     });
 
-    app.get('/test', function test(req, res) {
-        var ctx = app;
-    });
+    // app.get('/test', function test(req, res) {
+    //     var ctx = app;
+    // });
 
     //kinda what we do for routing
     // app.post('/api/createCard', function (req, res) {
