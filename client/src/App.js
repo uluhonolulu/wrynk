@@ -21,9 +21,9 @@ class App extends Component {
                 <a className="navbar-brand" href="/">rynk</a>
               </div>
 
-              <ul class="navbar-nav">
-                <li class="navbar-item">
-                    <a href="/auth/github" class="nav-link">Sign in</a>
+              <ul className="navbar-nav">
+                <li className="navbar-item">
+                    <a href="/auth/github" className="nav-link">Sign in</a>
                 </li>
               </ul>              
 
