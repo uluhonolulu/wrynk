@@ -56,10 +56,14 @@ export default class Choices extends Component {
 
   async canIVote() {
     try {
-      const response = await this.callBlockchain('CanVote');     
-      return true;      //if this transaction doesn't throw, it means we can vote; 
+      const data = {
+        "$class": "org.rynk.CanVote"
+      };
+      const response = await this.callBlockchain('CanVote', 'post', data);     
+      return !!response;      //if this transaction doesn't throw, it means we can vote; 
     } catch (error) {
       //TODO: check for error text
+      //Error trying invoke business network. Error: No valid responses from any peers. Response from attempted peer comms was an error: Error: 2 UNKNOWN: error executing chaincode: transaction returned with failure: Error: Can't vote twice, sorry!
       return false;      
     }
   }
@@ -105,7 +109,7 @@ export default class Choices extends Component {
       <FormGroup>
         {(canVote !== false)? null : (cannotVoteMessage)}
         {choices}
-        <Button bsStyle="success" disabled={isLoading} type="submit">    
+        <Button bsStyle="success" disabled={isLoading || !canVote} type="submit">    
           {isLoading ? 'Please wait...' : 'Vote'}
         </Button>
       </FormGroup>
@@ -178,8 +182,13 @@ export default class Choices extends Component {
       return response;
     } else {
       let message = await this.handleInvalidResponse(response);
-      this.setState({error: {message}});
-      throw new Error(message);    //so that we don't proceed
+      if (this.isMessageThatUserCantVote(message)) {  //not an error, we just had to throw since we can't return "false" from chaincode
+        return false;                //return the value to canIVote
+      } else {
+        this.setState({error: {message}});
+        throw new Error(message);    //so that we don't proceed        
+      }
+
     }
   }
 
@@ -198,6 +207,11 @@ export default class Choices extends Component {
         return responseText;
       }     
     }
+  }
+
+  //until chaincode is able to return data, we use a throw to check if the user can vote; a certain error message means they can't (but it's not an error)
+  isMessageThatUserCantVote(errMessage){
+    return errMessage.includes("Can't vote");
   }
   
 }
