@@ -49,14 +49,8 @@ module.exports = function (app) {
             // Extract the current user ID.
             const userId = ctx.args.options.accessToken.userId;
             if (!userId) {
-                return next();
-            }
-
-            // Check for the existance of a header specifying the card.
-            const cardName = ctx.req.get('X-Composer-Card');
-            if (cardName) {
-                ctx.args.options.cardStore = new LoopBackCardStore(Card, userId);
-                ctx.args.options.card = cardName;
+                ctx.res.send(401);
+                //return next(new Error(401));
                 return next();
             }
 
@@ -71,6 +65,9 @@ module.exports = function (app) {
                     if (lbCard) {
                         ctx.args.options.cardStore = new LoopBackCardStore(Card, userId);
                         ctx.args.options.card = lbCard.name;
+                    } else {
+                        ctx.res.send(401);
+                        throw new Error(401);
                     }
 
                 })
@@ -82,6 +79,17 @@ module.exports = function (app) {
                 });
 
         });
+
+    // app.remotes().phases
+    //     .addAfter('invoke', 'ensure-card')
+    //     .use(function ensureCard(ctx, next){
+    //         var self = app;
+    //     });
+    // app.remotes().phases
+    //     .addAfter('auth', 'ensure-card')
+    //     .use(function ensureCard(ctx, next){
+    //         var self = app;
+    //     });
 
 };
 

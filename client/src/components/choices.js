@@ -211,7 +211,7 @@ export default class Choices extends Component {
 
   //until chaincode is able to return data, we use a throw to check if the user can vote; a certain error message means they can't (but it's not an error)
   isMessageThatUserCantVote(errMessage){
-    return errMessage.includes("Can't vote");
+    return errMessage.toString().includes("Can't vote");
   }
   
 }
