@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "start": "node .",
     "client": "npm run start --prefix client",
-	"dev": "concurrently \"nodemon\" \"npm run client\" ",
+	"dev": "concurrently \"nodemon --ignore client/\" \"npm run client\" ",
     "posttest": "npm run lint && nsp check"
   },
   "dependencies": {

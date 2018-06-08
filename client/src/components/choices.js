@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Button, FormGroup, Radio, Alert } from 'react-bootstrap';
+import { Button, FormGroup, Radio, Alert, Modal } from 'react-bootstrap';
 import cookie from 'react-cookies';
 import uuidv1 from 'uuid/v1';
 import Loader from 'react-loader-spinner';
@@ -106,16 +106,30 @@ export default class Choices extends Component {
     let isLoading = this.state.isLoading;
     return (
       <form onSubmit={ this.onFormSubmit }>
-      <FormGroup>
-        {(canVote !== false)? null : (cannotVoteMessage)}
-        {choices}
-        <Button bsStyle="success" disabled={isLoading || !canVote} type="submit">    
-          {isLoading ? 'Please wait...' : 'Vote'}
-        </Button>
-      </FormGroup>
+        <FormGroup>
+          {(canVote !== false)? null : (cannotVoteMessage)}
+          {choices}
+          <Button bsStyle="success" disabled={isLoading || !canVote} type="submit">    
+            {isLoading ? 'Please wait...' : 'Vote'}
+          </Button>
+        </FormGroup>
+
+        <Modal show={this.state.showConfirmation} onHide={this.handleClose}>
+          <Modal.Header closeButton>
+            <Modal.Title>Thank you for voting!</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>Your vote will be counted in a few minutes.</p>           
+          </Modal.Body>
+          <Modal.Footer>
+            <Button bsStyle="success" onClick={this.closeConfirmationDialog.bind(this)}>Close</Button>
+          </Modal.Footer>
+        </Modal>
       </form>
     )
   }
+
+
 
   async onFormSubmit(event) {
     event.preventDefault();
@@ -124,7 +138,16 @@ export default class Choices extends Component {
     let chosen = data.get('choices');
     await this.voteFor(chosen);
     this.setState({ isLoading: false });
+    this.confirmVote();
   };  
+
+  confirmVote() {
+    this.setState({ showConfirmation: true });
+  }
+
+  closeConfirmationDialog() {
+    this.setState({ showConfirmation: false });
+  }
 
   async voteFor(choice){
     const uuid = uuidv1();
