@@ -18,11 +18,14 @@ export default class Choices extends Component {
       access_token: cookie.load('access_token')
     };
 
-    this.onFormSubmit = this.onFormSubmit.bind(this);
+    //refresh the state every 3s to get the current votes
+    setInterval(() => { this.updateVoteResults(); }, 3000);
   }
 
 
   async componentDidMount() {
+    console.log("componentDidMount");
+    
     if (!this.state.access_token) {
       this.setState({ isLoading: false });
       return;
@@ -35,24 +38,32 @@ export default class Choices extends Component {
       const choices = await this.getChoices();
       this.setState({ choices }); 
       
-      const results = await this.getResults();
-      this.setState(results);
-
-      choices.forEach(choice => {
-        let voteResult = results.find(result => result.choiceName === choice.name);
-        if (voteResult) {
-          choice.count = voteResult.count
-        } else {
-          choice.count = 0;
-        }
-      });
     } catch (error) {
       //everything's handled already
     }
 
     
     this.setState({ isLoading: false }); 
+
   }  
+
+  async updateVoteResults(){
+    
+    const results = await this.getResults();
+    this.setState(results);
+
+    const choices = this.state.choices;
+    choices.forEach(choice => {
+      let voteResult = results.find(result => result.choiceName === choice.name);
+      if (voteResult) {
+        choice.count = voteResult.count
+      } else {
+        choice.count = 0;
+      }
+    });
+    this.setState({ choices }); 
+
+  }
 
   async canIVote() {
     try {
@@ -62,8 +73,6 @@ export default class Choices extends Component {
       const response = await this.callBlockchain('CanVote', 'post', data);     
       return !!response;      //if this transaction doesn't throw, it means we can vote; 
     } catch (error) {
-      //TODO: check for error text
-      //Error trying invoke business network. Error: No valid responses from any peers. Response from attempted peer comms was an error: Error: 2 UNKNOWN: error executing chaincode: transaction returned with failure: Error: Can't vote twice, sorry!
       return false;      
     }
   }
@@ -96,7 +105,7 @@ export default class Choices extends Component {
     }
 
     const canVote = this.state.canVote;
-    const cannotVoteMessage = <Alert bsStyle="danger">You are not allowed to vote, sorry!</Alert>;
+    const cannotVoteMessage = <Alert bsStyle="danger">You are not allowed to vote multiple times, sorry!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
         <Radio key={index} disabled={!canVote} name="choices" value={choice.name}>{choice.name}: {choice.count}</Radio>
@@ -105,7 +114,7 @@ export default class Choices extends Component {
 
     let isLoading = this.state.isLoading;
     return (
-      <form onSubmit={ this.onFormSubmit }>
+      <form onSubmit={ this.onFormSubmit.bind(this) } key={this.state.key}>
         <FormGroup>
           {(canVote !== false)? null : (cannotVoteMessage)}
           {choices}
