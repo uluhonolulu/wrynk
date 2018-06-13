@@ -106,103 +106,7 @@ module.exports = function(app) {
         }        
     });
 
-    //after save hook
-    app.loopback.User.observe('after save', async function createCard(ctx, next) {  
-        console.log();
-        console.log("user saved");
-        // console.log(JSON.stringify(ctx));
-        // const composer = app.get('composer');
-        // const dataSource = createDataSource(app, composer);
-        // var connector = dataSource.connector;
-        if (ctx.isNewInstance) {
-            console.log("New user");
-
-            //we need to create a new card for a user
-            //1. create participant
-            //2. issue her an identity
-            //3. create and save a card
-            //"instance":{"username":"github.uluhonolulu","email":"uluhonolulu@loopback.github.com","id":"5adafa99f8c6f228d054aa8c"}
-            let userId = ctx.instance.id;
-            let userName = ctx.instance.username.replace(/\./, "_");   //github_uluhonolulu
-            const adminCardName = "admin@rynk";//TODO: use the REST connection identity
-            const adminConnection = new AdminConnection();
-            try {
-                let issuingCard = await adminConnection.exportCard(adminCardName);
-                const adminBusinessNetworkConnection = new BusinessNetworkConnection();
-                await adminBusinessNetworkConnection.connect(adminCardName);
-                
-                console.log("pinging admin using filesystem card");               
-                try {
-                    var user = await adminBusinessNetworkConnection.ping();
-                    console.log(user);                   
-                } catch (error) {
-                    console.error(error);                   
-                }
-
-                // Get the factory for the business network.
-                let factory = adminBusinessNetworkConnection.getBusinessNetwork().getFactory();
-                // Create the participants, Provide unique entries only
-                let participantRegistry = await adminBusinessNetworkConnection.getParticipantRegistry('org.rynk.User');
-                // let participantId = participant.getFullyQualifiedIdentifier();
-                let exists = await participantRegistry.exists(userName);
-                if (!exists){
-                    let participant = factory.newResource('org.rynk', "User", userName);
-                    await participantRegistry.add(participant);
-                    //HACK: let's just get the added participant until it's actually there
-                    let success = false;
-                    while(!success){
-                        try {
-                            participant = await participantRegistry.get(userName);   //make sure it's there
-                            success = true;
-                        } catch (error) {
-                            console.error("Error getting the new participant");
-                        }                        
-                    }
-
-                }
-
-                let identity = await adminBusinessNetworkConnection.issueIdentity('org.rynk.User' + '#' + userName, userName);
-                console.log("New identity");
-                console.log(identity);
-                
-                //save the card
-                let metadata= {
-                    userName : identity.userID,
-                    version : 1,
-                    enrollmentSecret: identity.userSecret,
-                    businessNetwork : issuingCard.getBusinessNetworkName()
-                };
-                let profileData = issuingCard.getConnectionProfile();
-                let idCard = new IdCard(metadata,profileData);
-
-                const Card = app.models.Card;//require('../../common/models/card');
-                const cardStore = new LoopBackCardStore(Card, userId);
-                const cardName = userName + '@rynk';
-                await cardStore.put(cardName, idCard);    
-                
-                //ping to activate
-                const userBusinessNetworkConnection = new BusinessNetworkConnection({cardStore});
-                console.log("Pinging " + cardName);               
-                try {
-                    await userBusinessNetworkConnection.connect(cardName);
-                    var user = await userBusinessNetworkConnection.ping();
-                    console.log(user);                   
-                } catch (error) {
-                    console.error(error);                   
-                } 
-            } catch (error) {
-                console.log();
-                console.log("ERROR");               
-                console.error(error);
-                return next(error);
-                // process.exit(1);
-            }
-
-        }
-        next();
-    });
-    
-    app.loopback.User.observe('loaded', async (ctx, next) => {
+    // app.loopback.User.observe('loaded', async (ctx, next) => {
         // ctx.options.username = "ulu";
         // ctx.hookState.username = "ulu";
         // console.log(JSON.stringify(ctx));
@@ -223,7 +127,7 @@ module.exports = function(app) {
         //         console.error(error);                   
         //     }            
         // }
-    });
+    // });
 
     // app.get('/test', function test(req, res) {
     //     var ctx = app;
