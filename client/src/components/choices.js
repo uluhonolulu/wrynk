@@ -48,20 +48,29 @@ export default class Choices extends Component {
   }  
 
   async updateVoteResults(){
-    
-    const results = await this.getResults();
-    this.setState(results);
 
-    const choices = this.state.choices;
-    choices.forEach(choice => {
-      let voteResult = results.find(result => result.choiceName === choice.name);
-      if (voteResult) {
-        choice.count = voteResult.count
-      } else {
-        choice.count = 0;
-      }
-    });
-    this.setState({ choices }); 
+    if (!this.state.access_token) {
+      return;
+    }
+    
+    try {
+      const results = await this.getResults();
+      this.setState(results);
+
+      const choices = this.state.choices;
+      choices.forEach(choice => {
+        let voteResult = results.find(result => result.choiceName === choice.name);
+        if (voteResult) {
+          choice.count = voteResult.count
+        } else {
+          choice.count = 0;
+        }
+      });
+      this.setState({ choices }); 
+      
+    } catch (error) {
+      //never mind
+    }
 
   }
 
@@ -105,7 +114,7 @@ export default class Choices extends Component {
     }
 
     const canVote = this.state.canVote;
-    const cannotVoteMessage = <Alert bsStyle="danger">You are not allowed to vote multiple times, sorry!</Alert>;
+    const cannotVoteMessage = <Alert bsStyle="success">Thank you for voting!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
         <Radio key={index} disabled={!canVote} name="choices" value={choice.name}>{choice.name}: {choice.count}</Radio>
