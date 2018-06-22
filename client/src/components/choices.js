@@ -32,11 +32,10 @@ export default class Choices extends Component {
     }
 
     try {
-      const canVote = await this.canIVote();
-      this.setState({ canVote });
-
       const choices = await this.getChoices();
       this.setState({ choices }); 
+
+      await this.updateVoteResults();
       
     } catch (error) {
       //everything's handled already
@@ -67,23 +66,13 @@ export default class Choices extends Component {
         }
       });
       this.setState({ choices }); 
+
+      await this.getMyVote();
       
     } catch (error) {
       //never mind
     }
 
-  }
-
-  async canIVote() {
-    try {
-      const data = {
-        "$class": "org.rynk.CanVote"
-      };
-      const response = await this.callBlockchain('CanVote', 'post', data);     
-      return !!response;      //if this transaction doesn't throw, it means we can vote; 
-    } catch (error) {
-      return false;      
-    }
   }
 
   async getChoices(){
@@ -95,6 +84,15 @@ export default class Choices extends Component {
   async getResults(){
     const response = await this.callBlockchain('VoteTotal');
     return await response.json();
+  }
+
+  async getMyVote() {
+    try {
+      const myVote = await this.callBlockchain("Ballot/github_uluhonolulu");
+      this.setState({ myVote });      
+    } catch (error) {
+      throw(error);
+    }
   }
 
   render() {
@@ -113,11 +111,11 @@ export default class Choices extends Component {
       return (<Loader type="TailSpin"/>);      
     }
 
-    const canVote = this.state.canVote;
-    const cannotVoteMessage = <Alert bsStyle="success">Thank you for voting!</Alert>;
+
+    //const cannotVoteMessage = <Alert bsStyle="success">Thank you for voting!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
-        <Radio key={index} disabled={!canVote} name="choices" value={choice.name}>{choice.name}: {choice.count}</Radio>
+        <Radio key={index} name="choices" value={choice.name}>{choice.name}: {choice.count}</Radio>
       );
     });
 
@@ -125,9 +123,8 @@ export default class Choices extends Component {
     return (
       <form onSubmit={ this.onFormSubmit.bind(this) } key={this.state.key}>
         <FormGroup>
-          {(canVote !== false)? null : (cannotVoteMessage)}
           {choices}
-          <Button bsStyle="success" disabled={isLoading || !canVote} type="submit">    
+          <Button bsStyle="success" disabled={isLoading} type="submit">    
             {isLoading ? 'Please wait...' : 'Vote'}
           </Button>
         </FormGroup>
@@ -151,7 +148,7 @@ export default class Choices extends Component {
 
   async onFormSubmit(event) {
     event.preventDefault();
-    this.setState({ isLoading: true, canVote: false });
+    this.setState({ isLoading: true });
     const data = new FormData(event.target);
     let chosen = data.get('choices');
     await this.voteFor(chosen);
@@ -223,19 +220,14 @@ export default class Choices extends Component {
       return response;
     } else {
       let message = await this.handleInvalidResponse(response);
-      if (this.isMessageThatUserCantVote(message)) {  //not an error, we just had to throw since we can't return "false" from chaincode
-        return false;                //return the value to canIVote
-      } else {
-        this.setState({error: {message}});
-        throw new Error(message);    //so that we don't proceed        
-      }
-
+      this.setState({error: {message}});
+      throw new Error(message);    //so that we don't proceed        
     }
   }
 
   async handleInvalidResponse(response) {
-    if (response.status === 404) {
-      return "Blockchain is not started.";
+    if (response.status === 4040) {
+      return "Blockchain is not started.";  //TODO: check for error message
     } else if (response.status === 401) {
       return 401;
     } else {
@@ -250,9 +242,5 @@ export default class Choices extends Component {
     }
   }
 
-  //until chaincode is able to return data, we use a throw to check if the user can vote; a certain error message means they can't (but it's not an error)
-  isMessageThatUserCantVote(errMessage){
-    return errMessage.toString().includes("Can't vote");
-  }
-  
+
 }

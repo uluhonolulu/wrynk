@@ -13,13 +13,7 @@ class App extends Component {
             <div className="container">
               <div className="navbar-header">
                 <a className="navbar-brand" href="/" style={{fontSize:"24px"}}>rynk</a>
-              </div>
-
-              <ul className="nav navbar-nav  navbar-right">
-                <li className="active">
-                    <a href="/auth/github" className="nav-link">Sign in</a>
-                </li>
-              </ul>          
+              </div>        
             </div>    
 
           </nav>
