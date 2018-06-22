@@ -37,8 +37,9 @@ export default class Choices extends Component {
 
       await this.updateVoteResults();
       
-    } catch (error) {
-      //everything's handled already
+    } catch (error) {   //error should be a string
+      // console.error(error);   
+      this.setState({ error: { message: error } });
     }
 
     
@@ -51,27 +52,21 @@ export default class Choices extends Component {
     if (!this.state.access_token) {
       return;
     }
-    
-    try {
-      const results = await this.getResults();
-      this.setState(results);
+    const results = await this.getResults();
+    this.setState(results);
 
-      const choices = this.state.choices;
-      choices.forEach(choice => {
-        let voteResult = results.find(result => result.choiceName === choice.name);
-        if (voteResult) {
-          choice.count = voteResult.count
-        } else {
-          choice.count = 0;
-        }
-      });
-      this.setState({ choices }); 
+    const choices = this.state.choices;
+    choices.forEach(choice => {
+      let voteResult = results.find(result => result.choiceName === choice.name);
+      if (voteResult) {
+        choice.count = voteResult.count
+      } else {
+        choice.count = 0;
+      }
+    });
+    this.setState({ choices }); 
 
-      await this.getMyVote();
-      
-    } catch (error) {
-      //never mind
-    }
+    await this.getMyVote();
 
   }
 
@@ -91,6 +86,16 @@ export default class Choices extends Component {
       const myVote = await this.callBlockchain("Ballot/github_uluhonolulu");
       this.setState({ myVote });      
     } catch (error) {
+
+      if (error.statusCode === 404 && error.code === "MODEL_NOT_FOUND") {
+        return null;
+      }
+
+      if(error.message){
+        throw(error.message);
+      }
+      console.log(JSON.stringify(error));
+      
       throw(error);
     }
   }
@@ -197,9 +202,9 @@ export default class Choices extends Component {
 
   async callBlockchain(name, method, transactionData){
     let requestData;
-    if (method === "post") {
+    if (method) {
       requestData = {
-        method: "post",  
+        method,  
         headers: {  
           "content-type": "application/json",
           "Accept": "application/json"  
@@ -219,22 +224,24 @@ export default class Choices extends Component {
     if (response.ok) {
       return response;
     } else {
-      let message = await this.handleInvalidResponse(response);
-      this.setState({error: {message}});
-      throw new Error(message);    //so that we don't proceed        
+      let error = await this.handleInvalidResponse(response);
+      // console.log(error);
+      
+      throw error;    //so that we don't proceed        
     }
   }
 
   async handleInvalidResponse(response) {
-    if (response.status === 4040) {
-      return "Blockchain is not started.";  //TODO: check for error message
-    } else if (response.status === 401) {
+    if (response.status === 404 && false) {  //TODO: don't confuse this with a missing model; check for error message
+      return "Blockchain is not started.";
+    } else if (response.status === 401) {   //need to sign in
       return 401;
     } else {
       let contentType = response.headers.get("Content-Type");
+      // let contentLength = response.headers.get("content-length");
       if (contentType && contentType.includes('json')) {
-        const error = await response.json();
-        return error.error.message;     
+        const body = await response.json();
+        return body.error;     
       } else {
         const responseText = await response.text();
         return responseText;
