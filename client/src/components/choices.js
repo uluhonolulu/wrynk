@@ -71,7 +71,11 @@ export default class Choices extends Component {
       }
 
       //my vote
-      choice.selected = (choice.name === votedChoice);
+      //if we changed the vote manually, don't display the loaded value
+      if (!this.state.voteChanged) {
+        choice.selected = (choice.name === votedChoice);      
+      }
+
     });
 
 
@@ -133,7 +137,7 @@ export default class Choices extends Component {
     //const cannotVoteMessage = <Alert bsStyle="success">Thank you for voting!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
-        <Radio key={index} name="choices" value={choice.name} checked={choice.selected}>{choice.name}: {choice.count}</Radio>
+        <Radio key={index} name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) }>{choice.name}: {choice.count}</Radio>
       );
     });
 
@@ -184,6 +188,24 @@ export default class Choices extends Component {
     } 
   
   };  
+
+  handleVoteChange(event) {
+    this.setState({voteChanged: true}); //to prevent changing back to the loaded vote
+
+    //get the selected value
+    var formElement = event.target.closest('form'); //document.querySelector("form")
+    const data = new FormData(formElement);
+    let chosen = data.get('choices');
+    
+    //now let's change the state to reflect the new situation
+    const choices = this.state.choices;
+    choices.forEach(choice => {
+      choice.selected = (choice.name === chosen);    
+    });  
+    
+    //update the state
+    this.setState({choices});
+  }
 
   confirmVote() {
     this.setState({ showConfirmation: true });
