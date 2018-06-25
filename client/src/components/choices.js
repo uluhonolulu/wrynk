@@ -17,7 +17,6 @@ export default class Choices extends Component {
 
     this.state = {
       choices: [],
-      results: [],
       isLoading: true,
       access_token: cookie.load('access_token')
     };
@@ -58,20 +57,25 @@ export default class Choices extends Component {
       return;
     }
     const results = await this.getResults();
-    this.setState(results);
+
+    const votedChoice = await this.getMyVote();
 
     const choices = this.state.choices;
     choices.forEach(choice => {
+      //vote count
       let voteResult = results.find(result => result.choiceName === choice.name);
       if (voteResult) {
         choice.count = voteResult.count
       } else {
         choice.count = 0;
       }
-    });
-    this.setState({ choices }); 
 
-    await this.getMyVote();
+      //my vote
+      choice.selected = (choice.name === votedChoice);
+    });
+
+
+    this.setState({ choices }); 
 
   }
 
@@ -91,10 +95,9 @@ export default class Choices extends Component {
       const response = await this.callBlockchain("Ballot/github_uluhonolulu");
       const ballot = await response.json();
       const votedChoice = this.getId(ballot.votedChoice);
-      console.log(votedChoice);
-      
-      // debugger;
-      this.setState({ votedChoice });      
+      // console.log(votedChoice);
+      return votedChoice;
+
     } catch (error) {
 
       if (error.statusCode === 404 && error.code === "MODEL_NOT_FOUND") {
@@ -130,7 +133,7 @@ export default class Choices extends Component {
     //const cannotVoteMessage = <Alert bsStyle="success">Thank you for voting!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
-        <Radio key={index} name="choices" value={choice.name}>{choice.name}: {choice.count}</Radio>
+        <Radio key={index} name="choices" value={choice.name} checked={choice.selected}>{choice.name}: {choice.count}</Radio>
       );
     });
 
