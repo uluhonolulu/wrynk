@@ -1,3 +1,7 @@
+//exception policy:
+//setState({error: <string>}) called from componentDidMount and such
+//methods inside componentDidMount are state agnostic; they throw string-typed errors
+
 import React, { Component } from 'react'
 import { Button, FormGroup, Radio, Alert, Modal } from 'react-bootstrap';
 import cookie from 'react-cookies';
@@ -38,8 +42,9 @@ export default class Choices extends Component {
       await this.updateVoteResults();
       
     } catch (error) {   //error should be a string
-      // console.error(error);   
-      this.setState({ error: { message: error } });
+      console.error(error);   
+      error = JSON.stringify(error);  //just in case
+      this.setState({ error });
     }
 
     
@@ -84,6 +89,7 @@ export default class Choices extends Component {
   async getMyVote() {
     try {
       const myVote = await this.callBlockchain("Ballot/github_uluhonolulu");
+      debugger;
       this.setState({ myVote });      
     } catch (error) {
 
@@ -103,13 +109,13 @@ export default class Choices extends Component {
   render() {
 
 
-    if (!this.state.access_token || (this.state.error && this.state.error.message) === 401) {
+    if (!this.state.access_token || this.state.error === 401) {
       // window.location.assign("/auth/github");
       return (<Alert bsStyle="danger">Please <a href="/auth/github">sign in</a>!</Alert>);
     }
 	
     if (this.state.error) {
-        return (<Alert bsStyle="danger">{this.state.error.message}</Alert>);		
+        return (<Alert bsStyle="danger">{this.state.error}</Alert>);		
     }
 
     if (this.state.isLoading) {
@@ -156,9 +162,20 @@ export default class Choices extends Component {
     this.setState({ isLoading: true });
     const data = new FormData(event.target);
     let chosen = data.get('choices');
-    await this.voteFor(chosen);
-    this.setState({ isLoading: false });
-    this.confirmVote();
+    try {
+      await this.voteFor(chosen);      
+      this.setState({ isLoading: false });
+      this.confirmVote();
+    } catch (error) {
+      //console.error(error);
+      let message = error.message;
+      if (error.name) {
+        message = `${error.name}: ${message}`;
+      }
+      this.setState({error: message});
+      this.setState({ isLoading: false });
+    } 
+  
   };  
 
   confirmVote() {
@@ -177,27 +194,7 @@ export default class Choices extends Component {
       "votedChoice": `resource:org.rynk.Choice#${choice}`
     };
 
-    try {
-      const response = await fetch(`/api/Vote?access_token=${this.state.access_token}`, 
-        {
-          method: "post",  
-          headers: {  
-            "content-type": "application/json",
-            "Accept": "application/json"  
-          },  
-          body: JSON.stringify(voteData)
-        });
-      console.log(response.status);  
-      console.log(response.statusText);  
-      console.log(response.type);  
-      if (response.status !== 200) {
-        this.handleInvalidResponse(response);
-      }      
-      return true;
-    } catch (error) {
-      console.error(error);
-      return false;
-    }        
+    await this.callBlockchain("Vote", "post", voteData);     
   }
 
   async callBlockchain(name, method, transactionData){
