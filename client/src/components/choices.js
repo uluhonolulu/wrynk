@@ -88,9 +88,13 @@ export default class Choices extends Component {
 
   async getMyVote() {
     try {
-      const myVote = await this.callBlockchain("Ballot/github_uluhonolulu");
-      debugger;
-      this.setState({ myVote });      
+      const response = await this.callBlockchain("Ballot/github_uluhonolulu");
+      const ballot = await response.json();
+      const votedChoice = this.getId(ballot.votedChoice);
+      console.log(votedChoice);
+      
+      // debugger;
+      this.setState({ votedChoice });      
     } catch (error) {
 
       if (error.statusCode === 404 && error.code === "MODEL_NOT_FOUND") {
@@ -191,6 +195,7 @@ export default class Choices extends Component {
     const voteData = {
       "$class": "org.rynk.Vote",
       "uuid": uuid,
+      "when": new Date(),
       "votedChoice": `resource:org.rynk.Choice#${choice}`
     };
 
@@ -244,6 +249,10 @@ export default class Choices extends Component {
         return responseText;
       }     
     }
+  }
+
+  getId(resourceName){    //"resource:namespace.assetType#id" => id
+    return resourceName.split("#")[1];
   }
 
 
