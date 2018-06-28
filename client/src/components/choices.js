@@ -42,7 +42,7 @@ export default class Choices extends Component {
       
     } catch (error) {   //error should be a string
       console.error(error);   
-      error = JSON.stringify(error);  //just in case
+      //error = JSON.stringify(error);  //just in case
       this.setState({ error });
     }
 
@@ -268,12 +268,20 @@ export default class Choices extends Component {
       // let contentLength = response.headers.get("content-length");
       if (contentType && contentType.includes('json')) {
         const body = await response.json();
+        //blockchain is not started
+        if (this.errorIsFabricNotStarted(body.error)) {
+          return "Blockchain is not started.";
+        }
         return body.error;     
       } else {
         const responseText = await response.text();
         return responseText;
       }     
     }
+  }
+
+  errorIsFabricNotStarted(error){
+    return error.message.startsWith("There is no method to handle");
   }
 
   getId(resourceName){    //"resource:namespace.assetType#id" => id
