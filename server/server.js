@@ -14,6 +14,8 @@ var loopbackPassport = require('loopback-component-passport');
 var PassportConfigurator = loopbackPassport.PassportConfigurator;
 var passportConfigurator = new PassportConfigurator(app);
 
+require("dotenv").config();
+
 
 // Enable http session
 app.middleware('session', session({
@@ -25,7 +27,9 @@ app.middleware('session', session({
 // Load the provider configurations
 var config = {};
 try {
- config = require('../providers.json');
+ config = require(`../providers.${app.get('env')}.json`);
+ config.github.clientID = process.env.GITHUB_ID;
+ config.github.clientSecret = process.env.GITHUB_SECRET;
 } catch(err) {
  console.error('Please configure your passport strategy in `providers.json`.');
  console.error('Copy `providers.json.template` to `providers.json` and replace the clientID/clientSecret values with your own.');
