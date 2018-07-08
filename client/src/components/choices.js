@@ -3,7 +3,7 @@
 //methods inside componentDidMount are state agnostic; they throw string-typed errors
 
 import React, { Component } from 'react'
-import { Button, FormGroup, Radio, Alert, Modal } from 'react-bootstrap';
+import { Button, FormGroup, Label, Input, Alert, Modal } from 'reactstrap';
 import cookie from 'react-cookies';
 import Loader from 'react-loader-spinner';
 
@@ -106,7 +106,12 @@ export default class Choices extends Component {
     //const cannotVoteMessage = <Alert bsStyle="success">Thank you for voting!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
-        <Radio key={index} name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) }>{choice.name}: {choice.count}</Radio>
+        <FormGroup check>
+          <Label check>
+            <Input type="radio" key={index} name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } />{' '}
+            {choice.name}: {choice.count}
+          </Label>
+        </FormGroup>
       );
     });
 
