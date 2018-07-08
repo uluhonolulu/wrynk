@@ -3,7 +3,7 @@
 //methods inside componentDidMount are state agnostic; they throw string-typed errors
 
 import React, { Component } from 'react'
-import { Button, FormGroup, Label, Input, Alert, Modal } from 'reactstrap';
+import { Row, Col, FormGroup, Label, Input, Alert, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import cookie from 'react-cookies';
 import Loader from 'react-loader-spinner';
 
@@ -68,7 +68,8 @@ export default class Choices extends Component {
       //vote count
       let voteResult = results.find(result => result.choiceName === choice.name);
       if (voteResult) {
-        choice.count = voteResult.count
+        choice.count = voteResult.count;
+        Object.assign(choice, voteResult);
       } else {
         choice.count = 0;
       }
@@ -106,37 +107,42 @@ export default class Choices extends Component {
     //const cannotVoteMessage = <Alert bsStyle="success">Thank you for voting!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
-        <FormGroup check>
-          <Label check>
-            <Input type="radio" key={index} name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } />{' '}
-            {choice.name}: {choice.count}
-          </Label>
-        </FormGroup>
+        <Col>
+          <FormGroup check>
+            <Label check>
+              <Input type="radio" key={index} name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } />{' '}
+              {choice.name}: {choice.count} <br/> <img src={choice.URL}/>>
+            </Label>
+          </FormGroup>
+        </Col>
       );
     });
 
     let isLoading = this.state.isLoading;
     return (
-      <form onSubmit={ this.onFormSubmit.bind(this) } key={this.state.key}>
-        <FormGroup>
-          {choices}
-          <Button bsStyle="success" disabled={isLoading} type="submit">    
-            {isLoading ? 'Please wait...' : 'Vote'}
-          </Button>
-        </FormGroup>
+      
+        <form onSubmit={ this.onFormSubmit.bind(this) } key={this.state.key}>
+          <FormGroup>
+            <Row>{choices}</Row>
+            <Button bsStyle="success" disabled={isLoading} type="submit">    
+              {isLoading ? 'Please wait...' : 'Vote'}
+            </Button>
+          </FormGroup>
 
-        <Modal show={this.state.showConfirmation} onHide={this.handleClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>Thank you for voting!</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p>Your vote will be counted in a few minutes.</p>           
-          </Modal.Body>
-          <Modal.Footer>
-            <Button bsStyle="success" onClick={this.closeConfirmationDialog.bind(this)}>Close</Button>
-          </Modal.Footer>
-        </Modal>
-      </form>
+          <Modal show={this.state.showConfirmation} onHide={this.handleClose}>
+            <ModalHeader closeButton>
+              <Modal.Title>Thank you for voting!</Modal.Title>
+            </ModalHeader>
+            <Modal.Body>
+              <p>Your vote will be counted in a few minutes.</p>           
+            </Modal.Body>
+            <ModalFooter>
+              <Button bsStyle="success" onClick={this.closeConfirmationDialog.bind(this)}>Close</Button>
+            </ModalFooter>
+          </Modal>
+        </form>
+
+      
     )
   }
 

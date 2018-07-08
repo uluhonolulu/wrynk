@@ -28,9 +28,7 @@ class App extends Component {
         </header>
 
         <Container style={{paddingTop:"24px"}}>
-          <Row>
-            <Choices/>    
-          </Row>
+          <Choices/>
         </Container>
       </div>
     );
