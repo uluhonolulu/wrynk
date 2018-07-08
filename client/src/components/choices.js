@@ -68,7 +68,6 @@ export default class Choices extends Component {
       //vote count
       let voteResult = results.find(result => result.choiceName === choice.name);
       if (voteResult) {
-        choice.count = voteResult.count;
         Object.assign(choice, voteResult);
       } else {
         choice.count = 0;
@@ -92,11 +91,11 @@ export default class Choices extends Component {
 
     if (!this.state.access_token || this.state.error === 401) {
       // window.location.assign("/auth/github");
-      return (<Alert bsStyle="danger">Please <a href="/auth/github">sign in</a>!</Alert>);
+      return (<Alert color="danger">Please <a href="/auth/github">sign in</a>!</Alert>);
     }
 	
     if (this.state.error) {
-        return (<Alert bsStyle="danger">{this.state.error}</Alert>);		
+        return (<Alert color="danger">{this.state.error}</Alert>);		
     }
 
     if (this.state.isLoading) {
@@ -104,14 +103,14 @@ export default class Choices extends Component {
     }
 
 
-    //const cannotVoteMessage = <Alert bsStyle="success">Thank you for voting!</Alert>;
+    //const cannotVoteMessage = <Alert color="success">Thank you for voting!</Alert>;
     const choices = this.state.choices.map((choice, index) => {
       return (
-        <Col>
+        <Col key={index}>
           <FormGroup check>
             <Label check>
-              <Input type="radio" key={index} name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } />{' '}
-              {choice.name}: {choice.count} <br/> <img src={choice.URL}/>>
+              <Input type="radio" name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } />{' '}
+              {choice.name}: {choice.count} <br/> <img src={choice.URL} style={{height: "300px"}}/>
             </Label>
           </FormGroup>
         </Col>
@@ -124,20 +123,20 @@ export default class Choices extends Component {
         <form onSubmit={ this.onFormSubmit.bind(this) } key={this.state.key}>
           <FormGroup>
             <Row>{choices}</Row>
-            <Button bsStyle="success" disabled={isLoading} type="submit">    
+            <Button color="success" disabled={isLoading} type="submit">    
               {isLoading ? 'Please wait...' : 'Vote'}
             </Button>
           </FormGroup>
 
-          <Modal show={this.state.showConfirmation} onHide={this.handleClose}>
-            <ModalHeader closeButton>
-              <Modal.Title>Thank you for voting!</Modal.Title>
+          <Modal isOpen={this.state.showConfirmation}>
+            <ModalHeader>
+              Thank you for voting!
             </ModalHeader>
-            <Modal.Body>
+            <ModalBody>
               <p>Your vote will be counted in a few minutes.</p>           
-            </Modal.Body>
+            </ModalBody>
             <ModalFooter>
-              <Button bsStyle="success" onClick={this.closeConfirmationDialog.bind(this)}>Close</Button>
+              <Button color="success" onClick={this.closeConfirmationDialog.bind(this)}>Close</Button>
             </ModalFooter>
           </Modal>
         </form>
