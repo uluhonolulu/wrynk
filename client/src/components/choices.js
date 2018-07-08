@@ -5,13 +5,15 @@
 import React, { Component } from 'react'
 import { Button, FormGroup, Radio, Alert, Modal } from 'react-bootstrap';
 import cookie from 'react-cookies';
-import uuidv1 from 'uuid/v1';
 import Loader from 'react-loader-spinner';
+
+import HL from '../lib/hl';
 
 
 export default class Choices extends Component {
   constructor(props, context) {
     super(props, context);
+    this.hl = new HL();
 
     // this.handleClick = this.handleClick.bind(this);
 
@@ -20,6 +22,7 @@ export default class Choices extends Component {
       isLoading: true,
       access_token: cookie.load('access_token')
     };
+    this.hl.access_token = this.state.access_token;
 
     //refresh the state every 3s to get the current votes
     setInterval(() => { this.updateVoteResults(); }, 3000);
@@ -35,7 +38,7 @@ export default class Choices extends Component {
     }
 
     try {
-      const choices = await this.getChoices();
+      const choices = await this.hl.getChoices();
       this.setState({ choices }); 
 
       await this.updateVoteResults();
@@ -56,9 +59,9 @@ export default class Choices extends Component {
     if (!this.state.access_token) {
       return;
     }
-    const results = await this.getResults();
+    const results = await this.hl.getResults();
 
-    const votedChoice = await this.getMyVote();
+    const votedChoice = await this.hl.getMyVote();
 
     const choices = this.state.choices;
     choices.forEach(choice => {
@@ -81,40 +84,6 @@ export default class Choices extends Component {
 
     this.setState({ choices }); 
 
-  }
-
-  async getChoices(){
-    const response = await this.callBlockchain('Choice');
-    const choices = await response.json();
-    return choices;
-  }
-
-  async getResults(){
-    const response = await this.callBlockchain('VoteTotal');
-    return await response.json();
-  }
-
-  async getMyVote() {
-    try {
-      const response = await this.callBlockchain("Ballot/github_uluhonolulu");
-      const ballot = await response.json();
-      const votedChoice = this.getId(ballot.votedChoice);
-      // console.log(votedChoice);
-      return votedChoice;
-
-    } catch (error) {
-
-      if (error.statusCode === 404 && error.code === "MODEL_NOT_FOUND") {
-        return null;
-      }
-
-      if(error.message){
-        throw(error.message);
-      }
-      console.log(JSON.stringify(error));
-      
-      throw(error);
-    }
   }
 
   render() {
@@ -174,7 +143,7 @@ export default class Choices extends Component {
     const data = new FormData(event.target);
     let chosen = data.get('choices');
     try {
-      await this.voteFor(chosen);      
+      await this.hl.voteFor(chosen);      
       this.setState({ isLoading: false });
       this.confirmVote();
     } catch (error) {
@@ -214,79 +183,5 @@ export default class Choices extends Component {
   closeConfirmationDialog() {
     this.setState({ showConfirmation: false });
   }
-
-  async voteFor(choice){
-    const uuid = uuidv1();
-    const voteData = {
-      "$class": "org.rynk.Vote",
-      "uuid": uuid,
-      "when": new Date(),
-      "votedChoice": `resource:org.rynk.Choice#${choice}`
-    };
-
-    await this.callBlockchain("Vote", "post", voteData);     
-  }
-
-  async callBlockchain(name, method, transactionData){
-    let requestData;
-    if (method) {
-      requestData = {
-        method,  
-        headers: {  
-          "content-type": "application/json",
-          "Accept": "application/json"  
-        }
-      };
-      if (transactionData) {
-        requestData.body = JSON.stringify(transactionData);
-      }
-    }
-
-    let url = `/api/${name}?access_token=${this.state.access_token}`;
-
-    return await fetch(url, requestData).then(this.handleResponse.bind(this)); 
-  }
-
-  async handleResponse(response){
-    if (response.ok) {
-      return response;
-    } else {
-      let error = await this.handleInvalidResponse(response);
-      // console.log(error);
-      
-      throw error;    //so that we don't proceed        
-    }
-  }
-
-  async handleInvalidResponse(response) {
-    if (response.status === 404 && false) {  //TODO: don't confuse this with a missing model; check for error message
-      return "Blockchain is not started.";
-    } else if (response.status === 401) {   //need to sign in
-      return 401;
-    } else {
-      let contentType = response.headers.get("Content-Type");
-      // let contentLength = response.headers.get("content-length");
-      if (contentType && contentType.includes('json')) {
-        const body = await response.json();
-        //blockchain is not started
-        if (this.errorIsFabricNotStarted(body.error)) {
-          return "Blockchain is not started.";
-        }
-        return body.error;     
-      } else {
-        const responseText = await response.text();
-        return responseText;
-      }     
-    }
-  }
-
-  errorIsFabricNotStarted(error){
-    return error.message.startsWith("There is no method to handle");
-  }
-
-  getId(resourceName){    //"resource:namespace.assetType#id" => id
-    return resourceName.split("#")[1];
-  }
-
 
 }
