@@ -45,7 +45,10 @@ export default class Choices extends Component {
       
     } catch (error) {   //error should be a string
       console.error(error);   
-      //error = JSON.stringify(error);  //just in case
+      if ((typeof error) === "object") {
+        error = JSON.stringify(error);  //shouldn't get here, but just in case
+        debugger;
+      }
       this.setState({ error });
     }
 
@@ -79,6 +82,9 @@ export default class Choices extends Component {
         choice.selected = (choice.name === votedChoice);      
       }
 
+      //image URL
+      choice.URL = choice.URL || `/choices/images/${choice.name}.jpg`;
+
     });
 
 
@@ -110,7 +116,7 @@ export default class Choices extends Component {
           <FormGroup check>
             <Label check>
               <Input type="radio" name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } />{' '}
-              {choice.name}: {choice.count} <br/> <img src={choice.URL} style={{height: "300px"}}/>
+              {choice.name}: {choice.count} <br/> <img src={choice.URL}/>
             </Label>
           </FormGroup>
         </Col>

@@ -1,7 +1,7 @@
 'use strict';
 const { UserCredential } = require('loopback-component-passport');
 
-
+var path = require('path');
 var loopback = require('loopback');
 var boot = require('loopback-boot');
 var cookieParser = require('cookie-parser');
@@ -58,6 +58,12 @@ boot(app, __dirname);
 app.middleware('auth', loopback.token({
   model: app.models.accessToken,
 }));
+
+//static files
+
+app.use(loopback.static(path.join(__dirname, '../choices/images')));
+console.log(path.join(__dirname, 'choices/images'));
+
 
 // Set up related models (needs to be after "boot", so that app.models are initialized)
 passportConfigurator.setupModels({

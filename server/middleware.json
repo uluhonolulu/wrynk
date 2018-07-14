@@ -41,9 +41,12 @@
     }
   },
   "files": {
-    "loopback#static": {
+    "loopback#static": [{
       "params": "$!../client/build" 
-    }
+    }, {
+      "paths": ["/choices/images"],
+      "params": "$!../choices/images"
+    }]
   },
   "final": {
     "loopback#urlNotFound": {}
