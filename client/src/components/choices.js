@@ -3,7 +3,7 @@
 //methods inside componentDidMount are state agnostic; they throw string-typed errors
 
 import React, { Component } from 'react'
-import { Row, Col, FormGroup, Label, Input, Alert, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Row, Col, FormGroup, Label, Input, Alert, Button, Modal, ModalHeader, ModalBody, ModalFooter, Card, CardHeader, CardTitle, CardSubtitle, CardBody, CardImg, CardText } from 'reactstrap';
 import cookie from 'react-cookies';
 import Loader from 'react-loader-spinner';
 
@@ -113,10 +113,20 @@ export default class Choices extends Component {
     const choices = this.state.choices.map((choice, index) => {
       return (
         <Col key={index}>
+          <Card className="text-center" style={{cursor: 'pointer'}}>
+            <CardHeader>
+              <CardTitle tag="h2">{choice.name}</CardTitle>
+              <CardSubtitle>Votes: {choice.count}</CardSubtitle>
+            </CardHeader>
+            <CardImg src={choice.URL} alt="Click to vote" />
+            <CardBody>
+              <CardText>Click to vote</CardText>              
+            </CardBody>
+          </Card>
           <FormGroup check>
             <Label check>
               <Input type="radio" name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } />{' '}
-              {choice.name}: {choice.count} <br/> <img src={choice.URL}/>
+              
             </Label>
           </FormGroup>
         </Col>
