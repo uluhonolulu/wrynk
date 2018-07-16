@@ -3,7 +3,7 @@
 //methods inside componentDidMount are state agnostic; they throw string-typed errors
 
 import React, { Component } from 'react'
-import { Row, Col, FormGroup, Label, Input, Alert, Button, Modal, ModalHeader, ModalBody, ModalFooter, Card, CardHeader, CardTitle, CardSubtitle, CardBody, CardImg, CardText } from 'reactstrap';
+import { Row, Col, FormGroup, Label, Input, Alert, Button, Modal, ModalHeader, ModalBody, ModalFooter, Card, CardHeader, CardTitle, CardSubtitle, CardBody, CardImg, CardText, CardFooter } from 'reactstrap';
 import cookie from 'react-cookies';
 import Loader from 'react-loader-spinner';
 
@@ -118,17 +118,19 @@ export default class Choices extends Component {
               <CardTitle tag="h2">{choice.name}</CardTitle>
               <CardSubtitle>Votes: {choice.count}</CardSubtitle>
             </CardHeader>
-            <CardImg src={choice.URL} alt="Click to vote" />
+
             <CardBody>
-              <CardText>Click to vote</CardText>              
+              <Label for={choice.name} >
+                <CardImg src={choice.URL} alt="Click to vote" />
+              </Label>              
             </CardBody>
+
+            <CardFooter>
+              <Label for={choice.name}>Click to vote</Label>  
+              <Input type="radio" name="choices" id={choice.name} value={choice.name} checked={choice.eslected} onChange={ this.handleVoteChange.bind(this) } />{' '}              
+            </CardFooter>
           </Card>
-          <FormGroup check>
-            <Label check>
-              <Input type="radio" name="choices" value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } />{' '}
-              
-            </Label>
-          </FormGroup>
+
         </Col>
       );
     });
