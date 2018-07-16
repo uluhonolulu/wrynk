@@ -113,7 +113,7 @@ export default class Choices extends Component {
     const choices = this.state.choices.map((choice, index) => {
       return (
         <Col key={index}>
-          <Card className="text-center" style={{cursor: 'pointer'}}>
+          <Card className="text-center" color={choice.selected? "primary" : ""} inverse={choice.selected} style={{cursor: 'pointer'}}>
             <CardHeader>
               <CardTitle tag="h2">{choice.name}</CardTitle>
               <CardSubtitle>Votes: {choice.count}</CardSubtitle>
@@ -127,7 +127,7 @@ export default class Choices extends Component {
 
             <CardFooter>
               <Label for={choice.name}>Click to vote</Label>  
-              <Input type="radio" name="choices" id={choice.name} value={choice.name} checked={choice.eslected} onChange={ this.handleVoteChange.bind(this) } />{' '}              
+              <Input type="radio" name="choices" id={choice.name} value={choice.name} checked={choice.selected} onChange={ this.handleVoteChange.bind(this) } style={{display: "none"}} />{' '}              
             </CardFooter>
           </Card>
 
@@ -141,10 +141,11 @@ export default class Choices extends Component {
         <form onSubmit={ this.onFormSubmit.bind(this) } key={this.state.key}>
           <FormGroup>
             <Row>{choices}</Row>
-            <Button color="success" disabled={isLoading} type="submit">    
-              {isLoading ? 'Please wait...' : 'Vote'}
-            </Button>
           </FormGroup>
+
+          <Button color="success" disabled={isLoading} type="submit" size="lg" block>    
+            {isLoading ? 'Please wait...' : 'Submit your vote'}
+          </Button>
 
           <Modal isOpen={this.state.showConfirmation}>
             <ModalHeader>
