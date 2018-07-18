@@ -4,9 +4,17 @@ import uuidv1 from 'uuid/v1';
 export default class HL {
 
     async getChoices(){
-        const response = await this.callBlockchain('Choice');
-        const choices = await response.json();
-        return choices;
+        try {
+            const response = await this.callBlockchain('Choice');
+            const choices = await response.json();
+            return choices;
+            
+        } catch (error) {
+            if (typeof error === "string") {
+                throw error;
+            }
+            throw error.message || JSON.stringify(error);
+        }
     }
 
     async getResults(){
@@ -16,7 +24,7 @@ export default class HL {
 
     async getMyVote() {
         try {
-            const response = await this.callBlockchain("Ballot/github_uluhonolulu");
+            const response = await this.callBlockchain("Ballot/github_uluhonolulu");    //TODO: use HEAD here
             const ballot = await response.json();
             const votedChoice = this.getId(ballot.votedChoice);
             // console.log(votedChoice);
