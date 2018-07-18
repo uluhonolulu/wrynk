@@ -24,7 +24,13 @@ export default class HL {
 
     async getMyVote() {
         try {
-            const response = await this.callBlockchain("Ballot/github_uluhonolulu");    //TODO: use HEAD here
+            let response = await this.callBlockchain("Ballot/github_uluhonolulu", "head");    //check if we have a vote
+            if (response.status === 404) {
+                return null;
+            }
+
+            //now let's get the vote result
+            response = await this.callBlockchain("Ballot/github_uluhonolulu");
             const ballot = await response.json();
             const votedChoice = this.getId(ballot.votedChoice);
             // console.log(votedChoice);
@@ -84,6 +90,9 @@ export default class HL {
         } else {
             let error = await this.handleInvalidResponse(response);
             // console.log(error);
+            if (!error) {
+                return response;    //not an error
+            }
 
             throw error; //so that we don't proceed
         }
@@ -95,19 +104,25 @@ export default class HL {
             return "Blockchain is not started.";
         } else if (response.status === 401) {
             //need to sign in
+            const responseText = await response.text();
+            debugger;
             return 401;
         } else {
+            const responseText = await response.text();
+            //if the text is empty, we don't have an error (like, we just checked for ballot existence)
+            if (!responseText) {
+                return null;
+            }
+
             let contentType = response.headers.get("Content-Type");
-            // let contentLength = response.headers.get("content-length");
             if (contentType && contentType.includes("json")) {
-                const body = await response.json();
+                const body = JSON.parse(responseText);
                 //blockchain is not started
                 if (this.errorIsFabricNotStarted(body.error)) {
                     return "Blockchain is not started.";
                 } 
                 return body.error;
             } else {
-                const responseText = await response.text();
                 return responseText;
             }
         }
